@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Location Suggestions</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb');
+      background-size: cover;
+      background-position: center;
+      height: 100vh;
+      overflow-y: auto;
+      color: #333;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.9);
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+
+    button {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    .location-item {
+      margin: 10px 0;
+      padding: 10px;
+      background: #eef;
+      border-radius: 6px;
+    }
+
+    #add-form {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Location Suggestions</h1>
+    <input type="text" id="search" placeholder="Search for a location" />
+    <div id="location-list"></div>
+    <div id="no-match" style="display: none;">
+      <p>Location not found. Would you like to add it?</p>
+      <button onclick="showAddForm()">Yes</button>
+      <button onclick="cancelAdd()">Cancel</button>
+    </div>
+    <div id="add-form">
+      <input type="text" id="new-name" placeholder="Enter place name" required />
+      <input type="text" id="new-lat" placeholder="Enter latitude" required />
+      <input type="text" id="new-lon" placeholder="Enter longitude" required />
+      <button onclick="saveLocation()" id="save-btn" disabled>Save</button>
+    </div>
+  </div>
+
+  <script>
+    const defaultLocations = [
+      { name: 'Afghanistan', lat: '33.9391', lon: '67.7100' },
+      { name: 'Albania', lat: '41.1533', lon: '20.1683' },
+      { name: 'Algeria', lat: '28.0339', lon: '1.6596' },
+      { name: 'Argentina', lat: '-38.4161', lon: '-63.6167' },
+      { name: 'Australia', lat: '-25.2744', lon: '133.7751' },
+      { name: 'Bangladesh', lat: '23.6850', lon: '90.3563' },
+      { name: 'Brazil', lat: '-14.2350', lon: '-51.9253' },
+      { name: 'Canada', lat: '56.1304', lon: '-106.3468' },
+      { name: 'China', lat: '35.8617', lon: '104.1954' },
+      { name: 'France', lat: '46.2276', lon: '2.2137' },
+      { name: 'Germany', lat: '51.1657', lon: '10.4515' },
+      { name: 'India', lat: '20.5937', lon: '78.9629' },
+      { name: 'Indonesia', lat: '-0.7893', lon: '113.9213' },
+      { name: 'Italy', lat: '41.8719', lon: '12.5674' },
+      { name: 'Japan', lat: '36.2048', lon: '138.2529' },
+      { name: 'Mexico', lat: '23.6345', lon: '-102.5528' },
+      { name: 'Nigeria', lat: '9.0820', lon: '8.6753' },
+      { name: 'Pakistan', lat: '30.3753', lon: '69.3451' },
+      { name: 'Russia', lat: '61.5240', lon: '105.3188' },
+      { name: 'South Africa', lat: '-30.5595', lon: '22.9375' },
+      { name: 'United Kingdom', lat: '55.3781', lon: '-3.4360' },
+      { name: 'United States', lat: '37.0902', lon: '-95.7129' }
+    ];
+
+    let storedLocations = JSON.parse(localStorage.getItem('locations')) || [];
+    let locations = [...defaultLocations, ...storedLocations];
+
+
+
+    const listDiv = document.getElementById('location-list');
+    const searchInput = document.getElementById('search');
+    const noMatchDiv = document.getElementById('no-match');
+    const addForm = document.getElementById('add-form');
+    const saveBtn = document.getElementById('save-btn');
+
+    function displayLocations(filtered = locations) {
+      listDiv.innerHTML = '';
+      filtered.forEach(loc => {
+        const div = document.createElement('div');
+        div.className = 'location-item';
+        div.textContent = `${loc.name}: Latitude ${loc.lat}, Longitude ${loc.lon}`;
+        div.onclick = () => {
+          localStorage.setItem('selectedLat', loc.lat);
+          localStorage.setItem('selectedLon', loc.lon);
+          window.location.href = 'index.html';
+        }
+        listDiv.appendChild(div);
+      });
+    }
+    
+
+    function showAddForm() {
+      addForm.style.display = 'block';
+    }
+
+    function cancelAdd() {
+      noMatchDiv.style.display = 'none';
+      addForm.style.display = 'none';
+    }
+
+    function saveLocation() {
+      const name = document.getElementById('new-name').value.trim();
+      const lat = document.getElementById('new-lat').value.trim();
+      const lon = document.getElementById('new-lon').value.trim();
+      if (name && lat && lon) {
+        const newLocation = { name, lat, lon };
+        const saved = JSON.parse(localStorage.getItem('locations')) || [];
+        saved.push(newLocation);
+        localStorage.setItem('locations', JSON.stringify(saved));
+
+
+        displayLocations();
+        addForm.style.display = 'none';
+        noMatchDiv.style.display = 'none';
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-lat').value = '';
+        document.getElementById('new-lon').value = '';
+        alert('New location added!');
+      }
+    }
+
+
+      searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      const results = locations.filter(loc => loc.name.toLowerCase().includes(query));
+      displayLocations(results);
+      noMatchDiv.style.display = results.length === 0 && query ? 'block' : 'none';
+      addForm.style.display = 'none';
+    });
+
+    document.querySelectorAll('#new-name, #new-lat, #new-lon').forEach(input => {
+      input.addEventListener('input', () => {
+        const filled = document.getElementById('new-name').value &&
+                       document.getElementById('new-lat').value &&
+                       document.getElementById('new-lon').value;
+        saveBtn.disabled = !filled;
+      });
+    });
+
+    displayLocations();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+

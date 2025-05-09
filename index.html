@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Air Quality Checker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preload" href="https://images.unsplash.com/photo-1506744038136-46273834b3fb" as="image" />
+</head>
+<body>
+  <div class="container" id="container">
+    <h1>Air Quality Checker</h1>
+    <form id="locationForm">
+      <input type="text" id="latitude" placeholder="Enter Latitude" required />
+      <br>
+      <input type="text" id="longitude" placeholder="Enter Longitude" required />
+      <br>
+      <button type="submit">Check</button>
+    </form>
+    <br/>
+    <a href="suggestions.html"><button>Show Suggestions</button></a>
+    <br/>
+    <br/>
+    <div id="loading" class="hidden">Loading...</div>
+  </div>
+ 
+  <button id="themeToggleBtn">🌗 Toggle Theme</button>
+  
+  <div id="bird-container"></div>
+
+  <!-- Display Air Quality Information -->
+  <div id="gas-values" class="hidden">
+    <div class="gas-item" id="gas-1"></div>
+    <div class="gas-item" id="gas-2"></div>
+    <div class="gas-item" id="gas-3"></div>
+    <div class="gas-item" id="gas-4"></div>
+    <div class="gas-item" id="gas-5"></div>
+    <div class="gas-item" id="gas-6"></div>
+    <div class="gas-item" id="gas-7"></div>
+    <div class="gas-item" id="gas-8"></div>
+    <div class="gas-item" id="gas-9"></div>
+  </div>
+  
+ 
+  
+
+  <script>
+      function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+      }
+      document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+
+     function displayGasValues(components) {
+      document.getElementById('gas-1').textContent = `PM2.5: ${components.pm2_5} µg/m³`;
+      document.getElementById('gas-2').textContent = `PM10: ${components.pm10} µg/m³`;
+      document.getElementById('gas-3').textContent = `CO: ${components.co} µg/m³`;
+      document.getElementById('gas-4').textContent = `NO: ${components.no} µg/m³`;
+      document.getElementById('gas-5').textContent = `NO₂: ${components.no2} µg/m³`;
+      document.getElementById('gas-6').textContent = `O₃: ${components.o3} µg/m³`;
+      document.getElementById('gas-7').textContent = `SO₂: ${components.so2} µg/m³`;
+      document.getElementById('gas-8').textContent = `NH₃: ${components.nh3} µg/m³`;
+      document.getElementById('gas-9').textContent = `AQI (Index): ${data.list[0].main.aqi}`;
+    }
+    const form = document.getElementById('locationForm');
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('container');
+    const birdContainer = document.getElementById('bird-container');
+    const gasValues = document.getElementById('gas-values');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      loading.classList.remove('hidden');
+      container.classList.add('blur-bg');
+      const lat = parseFloat(document.getElementById('latitude').value);
+      const lon = parseFloat(document.getElementById('longitude').value);
+      if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lon) || lon < -180 || lon > 180) {
+        alert('Invalid coordinates. Please enter valid latitude (-90 to 90) and longitude (-180 to 180).');
+        return;
+      }
+      createBirds(10);
+      slideGasValues();
+        fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=7a24bae5eeca1a2336f3d27b64edec8e`)
+        .then(response => response.json())
+        .then(data => {
+          const components = data.list[0].components;
+          displayGasValues(components);
+          loading.classList.add('hidden');
+          container.classList.remove('blur-bg');
+          createBirds(10);
+        })
+        .catch(error => {
+          const components = data.list[0].components;
+          const aqiLevel = data.list[0].main.aqi;
+          displayGasValues({ ...components, aqiLevel });
+          console.error('Error fetching air quality data:', error);
+        });
+        setTimeout(() => {
+          loading.classList.add('hidden');
+          container.classList.remove('blur-bg');
+          birdContainer.innerHTML = '';
+        }, 4000);
+    });
+
+    function createBirds(count) {
+      for (let i = 0; i < count; i++) {
+        const bird = document.createElement('img');
+        bird.src = "https://img1.picmix.com/output/stamp/normal/7/1/9/5/515917_c1088.gif";  // Bird GIF
+        bird.className = 'bird';
+        const angle = Math.random() * 360;
+        const distance = Math.random() * 500 + 200;
+
+        bird.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+        bird.style.setProperty('--move-x', `${Math.cos(angle) * distance}px`);
+        bird.style.setProperty('--move-y', `${Math.sin(angle) * distance}px`);
+
+        birdContainer.appendChild(bird);
+
+        setTimeout(() => {
+          bird.remove();
+        }, 4000);
+      }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const lat = localStorage.getItem('selectedLat');
+      const lon = localStorage.getItem('selectedLon');
+      if (lat && lon) {
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lon;
+        localStorage.removeItem('selectedLat');
+        localStorage.removeItem('selectedLon');
+      }
+    });
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    
+    function slideGasValues() {
+      const gasItems = document.querySelectorAll('.gas-item');
+      const gasContainer = document.getElementById('gas-values');
+
+      gasContainer.style.opacity = '1'; // Show container
+      gasContainer.style.pointerEvents = 'auto';
+
+      gasItems.forEach((item, index) => {
+        const direction = index % 2 === 0 ? 'left' : 'right';
+        item.classList.add('slide-in', direction);
+      });
+    }
+
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
